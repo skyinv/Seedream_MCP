@@ -116,16 +116,20 @@ async def handle_multi_image_fusion(arguments: Dict[str, Any]) -> List[TextConte
         auto_save_results = []
         
         # 如果启用自动保存且API调用成功，执行自动保存
-        if enable_auto_save and result.get("success") and response_format == "url":
+        if enable_auto_save and result.get("success"):
             try:
-                auto_save_results = await _handle_auto_save(
-                    result, prompt, config, save_path, custom_name
-                )
-                
-                # 更新结果以包含自动保存信息
-                if auto_save_results:
-                    result = _update_result_with_auto_save(result, auto_save_results)
-                    
+                if response_format == "url":
+                    auto_save_results = await _handle_auto_save(
+                        result, prompt, config, save_path, custom_name
+                    )
+                    if auto_save_results:
+                        result = _update_result_with_auto_save(result, auto_save_results)
+                elif response_format == "b64_json":
+                    auto_save_results = await _handle_auto_save_base64(
+                        result, prompt, config, save_path, custom_name
+                    )
+                    if auto_save_results:
+                        result = _update_result_with_auto_save(result, auto_save_results)
             except Exception as e:
                 logger.warning(f"自动保存失败，但继续返回原始结果: {e}")
         
@@ -199,6 +203,62 @@ async def _handle_auto_save(
     return await auto_save_manager.save_multiple_images(
         image_data, "multi_image_fusion"
     )
+
+
+async def _handle_auto_save_base64(
+    result: Dict[str, Any],
+    prompt: str,
+    config: SeedreamConfig,
+    save_path: Optional[str] = None,
+    custom_name: Optional[str] = None
+) -> List[AutoSaveResult]:
+    """处理 base64 自动保存（多图融合）
+    当 response_format 为 b64_json 时，从结果中提取 base64 并保存到本地。
+    """
+    logger = get_logger(__name__)
+    try:
+        base_dir = Path(save_path) if save_path else (
+            Path(config.auto_save_base_dir) if config.auto_save_base_dir else None
+        )
+
+        auto_save_manager = AutoSaveManager(
+            base_dir=base_dir,
+            download_timeout=config.auto_save_download_timeout,
+            max_retries=config.auto_save_max_retries,
+            max_file_size=config.auto_save_max_file_size,
+            max_concurrent=config.auto_save_max_concurrent
+        )
+
+        data = result.get("data", {})
+        if isinstance(data, list):
+            images = data
+        elif isinstance(data, dict) and "data" in data:
+            images = data["data"]
+        else:
+            images = [data]
+
+        image_data = []
+        for i, image in enumerate(images):
+            if isinstance(image, dict) and "b64_json" in image:
+                image_data.append({
+                    'b64_json': image['b64_json'],
+                    'prompt': prompt,
+                    'custom_name': f"{custom_name}_{i+1}" if custom_name else None,
+                    'alt_text': f"Fused image {i+1}: {prompt[:50]}..."
+                })
+
+        if not image_data:
+            logger.warning("未找到可保存的Base64图片数据")
+            return []
+
+        auto_save_results = await auto_save_manager.save_multiple_base64_images(
+            image_data, tool_name="multi_image_fusion"
+        )
+        logger.info(f"Base64 自动保存完成: {len(auto_save_results)} 个图片")
+        return auto_save_results
+    except Exception as e:
+        logger.error(f"Base64 自动保存失败: {e}")
+        return []
 
 
 def _update_result_with_auto_save(
@@ -293,16 +353,22 @@ def _format_multi_image_fusion_response(
         response_lines.append("🎨 融合生成的图像:")
         for i, image in enumerate(images, 1):
             if isinstance(image, dict):
+                # URL信息（如果存在）
                 if "url" in image:
                     response_lines.append(f"  {i}. 图像URL: {image['url']}")
-                    # 添加本地路径信息（如果有）
-                    if "local_path" in image:
-                        response_lines.append(f"     💾 本地路径: {image['local_path']}")
-                    if "markdown_ref" in image:
-                        response_lines.append(f"     📝 Markdown引用: {image['markdown_ref']}")
-                elif "b64_json" in image:
+                
+                # Base64信息（如果存在）
+                if "b64_json" in image:
                     response_lines.append(f"  {i}. 图像数据: [Base64编码，长度: {len(image['b64_json'])}字符]")
-                elif "revised_prompt" in image:
+                
+                # 本地路径与Markdown引用（如自动保存）
+                if "local_path" in image:
+                    response_lines.append(f"     💾 本地路径: {image['local_path']}")
+                if "markdown_ref" in image:
+                    response_lines.append(f"     📝 Markdown引用: {image['markdown_ref']}")
+                
+                # 修订提示词（如果存在）
+                if "revised_prompt" in image:
                     response_lines.append(f"  {i}. 修订提示词: {image['revised_prompt']}")
             else:
                 response_lines.append(f"  {i}. {str(image)}")

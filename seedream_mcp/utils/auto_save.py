@@ -1,13 +1,14 @@
 """
 自动保存核心模块
-集成下载和文件管理，实现完整的自动保存逻辑
+集成下载和文件管理,实现完整的自动保存逻辑
 """
 
 import asyncio
+import base64
 import logging
-from typing import Optional, Dict, Any, List
-from pathlib import Path
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, List, Optional, Tuple
 
 from .download_manager import DownloadManager, DownloadError
 from .file_manager import FileManager, FileManagerError
@@ -89,6 +90,40 @@ class AutoSaveManager:
             max_file_size=max_file_size
         )
         self.max_concurrent = max_concurrent
+
+    def _parse_data_uri(self, data: str) -> Tuple[Optional[str], str]:
+        """
+        解析 data URI,返回 (mime_type, base64_payload)
+        如果不是 data URI,则返回 (None, 原始字符串)
+        """
+        try:
+            if data.startswith("data:"):
+                header, payload = data.split(",", 1)
+                # header 形式如: data:image/png;base64
+                header = header[5:]  # 去掉 'data:'
+                mime = None
+                if ";" in header:
+                    mime = header.split(";")[0] or None
+                else:
+                    mime = header or None
+                return mime, payload
+            return None, data
+        except Exception:
+            return None, data
+
+    def _extension_from_mime(self, mime: Optional[str]) -> str:
+        mapping = {
+            'image/png': '.png',
+            'image/jpeg': '.jpg',
+            'image/jpg': '.jpg',
+            'image/webp': '.webp',
+            'image/gif': '.gif',
+            'image/bmp': '.bmp',
+            'image/tiff': '.tif'
+        }
+        if not mime:
+            return '.jpg'
+        return mapping.get(mime.lower(), '.jpg')
     
     async def save_image(
         self,
@@ -171,6 +206,84 @@ class AutoSaveManager:
                 original_url=url,
                 error=f"未知错误: {e}"
             )
+
+    async def save_base64_image(
+        self,
+        b64_data: str,
+        prompt: str = "",
+        tool_name: str = "seedream",
+        custom_name: Optional[str] = None,
+        alt_text: Optional[str] = None
+    ) -> AutoSaveResult:
+        """
+        保存单个 Base64 图片(支持 data URI 或纯 base64 字符串)
+        """
+        try:
+            logger.info("开始自动保存 Base64 图片")
+
+            mime, payload = self._parse_data_uri(b64_data)
+            payload = (payload or "").strip()
+            if not payload:
+                raise AutoSaveError("空的Base64数据")
+
+            try:
+                content_bytes = base64.b64decode(payload, validate=False)
+            except Exception as e:
+                raise AutoSaveError(f"Base64解码失败: {e}")
+
+            # 推断扩展名
+            extension = self._extension_from_mime(mime) if mime else self.file_manager.infer_extension_from_bytes(content_bytes, default=".jpg")
+
+            # 创建保存路径
+            content_hash = self.file_manager.get_content_hash(content_bytes)
+            save_path = self.file_manager.create_save_path_from_extension(
+                prompt=prompt,
+                extension=extension,
+                tool_name=tool_name,
+                custom_name=custom_name,
+                content_hash=content_hash
+            )
+
+            # 写入文件
+            write_result = self.file_manager.save_bytes(save_path, content_bytes)
+
+            # 生成 Markdown 引用
+            markdown_alt = alt_text or prompt or "Generated Image"
+            markdown_ref = self.file_manager.generate_markdown_reference(Path(write_result['file_path']), markdown_alt)
+
+            metadata = {
+                'prompt': prompt,
+                'tool_name': tool_name,
+                'save_time': write_result.get('save_time'),
+                'file_size': write_result.get('file_size', 0),
+                'content_type': mime or '',
+                'attempts': 1
+            }
+
+            original_desc = f"base64:{len(payload)}"
+            logger.info(f"Base64 图片保存成功: {write_result['file_path']}")
+            return AutoSaveResult(
+                success=True,
+                original_url=original_desc,
+                local_path=write_result['file_path'],
+                markdown_ref=markdown_ref,
+                metadata=metadata
+            )
+
+        except (FileManagerError, AutoSaveError) as e:
+            logger.error(f"Base64 图片保存失败: {e}")
+            return AutoSaveResult(
+                success=False,
+                original_url='base64',
+                error=str(e)
+            )
+        except Exception as e:
+            logger.error(f"Base64 图片保存出现未知错误: {e}")
+            return AutoSaveResult(
+                success=False,
+                original_url='base64',
+                error=f"未知错误: {e}"
+            )
     
     async def save_multiple_images(
         self,
@@ -181,7 +294,7 @@ class AutoSaveManager:
         批量保存多个图片
         
         Args:
-            image_data: 图片数据列表，每个元素包含url、prompt等信息
+            image_data: 图片数据列表,每个元素包含url、prompt等信息
             tool_name: 工具名称
             
         Returns:
@@ -237,6 +350,56 @@ class AutoSaveManager:
         logger.info(f"批量保存完成: {success_count}/{len(image_data)} 成功")
         
         return processed_results
+
+    async def save_multiple_base64_images(
+        self,
+        image_data: List[Dict[str, Any]],
+        tool_name: str = "seedream"
+    ) -> List[AutoSaveResult]:
+        """
+        并发保存多个 Base64 图片
+        """
+        logger.info(f"开始批量保存 {len(image_data)} 个 Base64 图片")
+
+        tasks = []
+        for data in image_data:
+            b64 = data.get('b64_json', '')
+            prompt = data.get('prompt', '')
+            custom_name = data.get('custom_name')
+            alt_text = data.get('alt_text')
+            tasks.append(self.save_base64_image(
+                b64_data=b64,
+                prompt=prompt,
+                tool_name=tool_name,
+                custom_name=custom_name,
+                alt_text=alt_text
+            ))
+
+        semaphore = asyncio.Semaphore(self.max_concurrent)
+
+        async def save_with_semaphore(task):
+            async with semaphore:
+                return await task
+
+        results = await asyncio.gather(
+            *[save_with_semaphore(task) for task in tasks],
+            return_exceptions=True
+        )
+
+        processed_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                processed_results.append(AutoSaveResult(
+                    success=False,
+                    original_url='base64',
+                    error=str(result)
+                ))
+            else:
+                processed_results.append(result)
+
+        success_count = sum(1 for r in processed_results if r.success)
+        logger.info(f"批量 Base64 保存完成: {success_count}/{len(image_data)} 成功")
+        return processed_results
     
     def format_response_with_auto_save(
         self,
@@ -275,7 +438,7 @@ class AutoSaveManager:
                 image['local_path'] = result.local_path
                 image['markdown_ref'] = result.markdown_ref
                 
-                # 如果不包含原始URL，移除URL字段
+                # 如果不包含原始URL,移除URL字段
                 if not include_original_urls and 'url' in image:
                     image['original_url'] = image.pop('url')
             else:
@@ -336,18 +499,6 @@ class AutoSaveManager:
         
         return "\n".join(lines)
     
-    async def cleanup_old_files(self, days: int = 30) -> Dict[str, Any]:
-        """
-        清理旧文件
-        
-        Args:
-            days: 保留天数
-            
-        Returns:
-            清理结果
-        """
-        return self.file_manager.cleanup_old_files(days)
-    
     def get_storage_info(self) -> Dict[str, Any]:
         """
         获取存储信息
@@ -381,3 +532,15 @@ class AutoSaveManager:
                 'base_directory': str(base_dir),
                 'error': str(e)
             }
+    
+    async def cleanup_old_files(self, days: int = 30) -> Dict[str, Any]:
+        """
+        清理旧文件
+        
+        Args:
+            days: 保留天数
+            
+        Returns:
+            清理结果
+        """
+        return self.file_manager.cleanup_old_files(days)

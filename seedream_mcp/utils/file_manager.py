@@ -27,7 +27,7 @@ class FileManager:
         初始化文件管理器
         
         Args:
-            base_dir: 基础目录，默认为当前工作目录下的images文件夹
+            base_dir: 基础目录,默认为当前工作目录下的images文件夹
         """
         if base_dir is None:
             base_dir = Path.cwd() / "images"
@@ -140,6 +140,39 @@ class FileManager:
         
         return filename.strip()
     
+    def generate_name_from_prompt(self, prompt: str, max_length: int = 50) -> str:
+        """
+        从提示词生成文件名
+        
+        Args:
+            prompt: 提示词
+            max_length: 最大长度
+            
+        Returns:
+            生成的文件名
+        """
+        if not prompt:
+            return "image"
+        
+        # 移除特殊字符，保留字母数字和空格
+        clean_prompt = re.sub(r'[^\w\s-]', '', prompt)
+        
+        # 替换空格为下划线
+        clean_prompt = re.sub(r'\s+', '_', clean_prompt)
+        
+        # 限制长度
+        if len(clean_prompt) > max_length:
+            clean_prompt = clean_prompt[:max_length]
+        
+        # 移除首尾下划线
+        clean_prompt = clean_prompt.strip('_')
+        
+        # 确保不为空
+        if not clean_prompt:
+            clean_prompt = "image"
+        
+        return clean_prompt.lower()
+    
     def generate_unique_filename(
         self,
         base_name: str,
@@ -189,6 +222,40 @@ class FileManager:
             SHA256哈希值
         """
         return hashlib.sha256(content).hexdigest()
+    
+    def infer_extension_from_bytes(self, content: bytes, default: str = ".jpg") -> str:
+        """
+        基于文件头推断图片扩展名
+        
+        Args:
+            content: 图片字节内容
+            default: 默认扩展名
+        
+        Returns:
+            扩展名（包含点号）
+        """
+        try:
+            # PNG
+            if content.startswith(b"\x89PNG\r\n\x1a\n"):
+                return ".png"
+            # JPEG
+            if content.startswith(b"\xff\xd8\xff"):
+                return ".jpg"
+            # GIF
+            if content.startswith(b"GIF87a") or content.startswith(b"GIF89a"):
+                return ".gif"
+            # BMP
+            if content.startswith(b"BM"):
+                return ".bmp"
+            # WEBP (RIFF....WEBP)
+            if content.startswith(b"RIFF") and len(content) >= 12 and content[8:12] == b"WEBP":
+                return ".webp"
+            # TIFF
+            if content.startswith(b"II*\x00") or content.startswith(b"MM\x00*"):
+                return ".tif"
+        except Exception:
+            pass
+        return default
     
     def get_organized_path(
         self,
@@ -267,39 +334,89 @@ class FileManager:
             raise FileManagerError(f"路径不安全: {save_path}")
         
         return save_path
-    
-    def generate_name_from_prompt(self, prompt: str, max_length: int = 50) -> str:
+
+    def create_save_path_from_extension(
+        self,
+        prompt: str,
+        extension: str,
+        tool_name: str = "seedream",
+        custom_name: Optional[str] = None,
+        content_hash: Optional[str] = None
+    ) -> Path:
         """
-        从提示词生成文件名
+        基于扩展名创建保存路径
         
         Args:
-            prompt: 提示词
-            max_length: 最大长度
-            
+            prompt: 生成提示词
+            extension: 文件扩展名
+            tool_name: 工具名称
+            custom_name: 自定义名称
+            content_hash: 内容哈希（用于去重/标识）
+        
         Returns:
-            生成的文件名
+            保存路径
         """
-        if not prompt:
-            return "image"
+        base_name = custom_name or self.generate_name_from_prompt(prompt)
+        filename = self.generate_unique_filename(base_name, extension, content_hash=content_hash)
+        save_path = self.get_organized_path(filename, tool_name)
+        if not self.validate_path(save_path):
+            raise FileManagerError(f"路径不安全: {save_path}")
+        return save_path
+
+    def create_save_path_from_content(
+        self,
+        prompt: str,
+        content_bytes: bytes,
+        tool_name: str = "seedream",
+        custom_name: Optional[str] = None,
+        default_extension: str = ".jpg"
+    ) -> Path:
+        """
+        基于字节内容创建保存路径（推断扩展名并使用内容哈希）
+        """
+        extension = self.infer_extension_from_bytes(content_bytes, default=default_extension)
+        content_hash = self.get_content_hash(content_bytes)
+        return self.create_save_path_from_extension(
+            prompt=prompt,
+            extension=extension,
+            tool_name=tool_name,
+            custom_name=custom_name,
+            content_hash=content_hash
+        )
+
+    def save_bytes(self, file_path: Path, data: bytes, overwrite: bool = False) -> Dict[str, Any]:
+        """
+        将字节数据写入文件
         
-        # 移除特殊字符，保留字母数字和空格
-        clean_prompt = re.sub(r'[^\w\s-]', '', prompt)
+        Args:
+            file_path: 目标路径
+            data: 字节数据
+            overwrite: 是否覆盖已有文件
         
-        # 替换空格为下划线
-        clean_prompt = re.sub(r'\s+', '_', clean_prompt)
-        
-        # 限制长度
-        if len(clean_prompt) > max_length:
-            clean_prompt = clean_prompt[:max_length]
-        
-        # 移除首尾下划线
-        clean_prompt = clean_prompt.strip('_')
-        
-        # 确保不为空
-        if not clean_prompt:
-            clean_prompt = "image"
-        
-        return clean_prompt.lower()
+        Returns:
+            保存结果元数据
+        """
+        try:
+            # 目录保证存在
+            self.ensure_directory(file_path.parent)
+            # 如果文件存在并且不允许覆盖，生成新的唯一文件名
+            final_path = file_path
+            if final_path.exists() and not overwrite:
+                base = final_path.stem
+                ext = final_path.suffix
+                # 添加一个短哈希避免冲突
+                short_hash = self.get_content_hash(data)[:8]
+                final_path = final_path.with_name(f"{base}_{short_hash}{ext}")
+            # 写入数据
+            with open(final_path, 'wb') as f:
+                f.write(data)
+            return {
+                'file_path': str(final_path),
+                'file_size': len(data),
+                'save_time': datetime.now().isoformat()
+            }
+        except OSError as e:
+            raise FileManagerError(f"写入文件失败: {file_path} -> {e}")
     
     def get_relative_path(self, file_path: Path) -> str:
         """

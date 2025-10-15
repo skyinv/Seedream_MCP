@@ -102,14 +102,19 @@ async def handle_text_to_image(arguments: Dict[str, Any]) -> List[TextContent]:
         
         # 处理自动保存
         auto_save_results = []
-        if enable_auto_save and result.get("success") and response_format == "url":
-            auto_save_results = await _handle_auto_save(
-                result, prompt, config, save_path, custom_name
-            )
-            
-            # 更新响应以包含自动保存信息
-            if auto_save_results:
-                result = _update_result_with_auto_save(result, auto_save_results)
+        if enable_auto_save and result.get("success"):
+            if response_format == "url":
+                auto_save_results = await _handle_auto_save(
+                    result, prompt, config, save_path, custom_name
+                )
+                if auto_save_results:
+                    result = _update_result_with_auto_save(result, auto_save_results)
+            elif response_format == "b64_json":
+                auto_save_results = await _handle_auto_save_base64(
+                    result, prompt, config, save_path, custom_name
+                )
+                if auto_save_results:
+                    result = _update_result_with_auto_save(result, auto_save_results)
         
         # 格式化响应
         response_text = _format_text_to_image_response(
@@ -194,6 +199,63 @@ async def _handle_auto_save(
         
     except Exception as e:
         logger.error(f"自动保存失败: {e}")
+        return []
+
+
+async def _handle_auto_save_base64(
+    result: Dict[str, Any], 
+    prompt: str, 
+    config: SeedreamConfig,
+    save_path: Optional[str] = None,
+    custom_name: Optional[str] = None
+) -> List:
+    """处理 base64 自动保存
+    
+    当 response_format 为 b64_json 时，从结果中提取 base64 并保存到本地。
+    """
+    logger = get_logger(__name__)
+    try:
+        base_dir = Path(save_path) if save_path else (
+            Path(config.auto_save_base_dir) if config.auto_save_base_dir else None
+        )
+
+        auto_save_manager = AutoSaveManager(
+            base_dir=base_dir,
+            download_timeout=config.auto_save_download_timeout,
+            max_retries=config.auto_save_max_retries,
+            max_file_size=config.auto_save_max_file_size,
+            max_concurrent=config.auto_save_max_concurrent
+        )
+
+        data = result.get("data", {})
+        if isinstance(data, list):
+            images = data
+        elif isinstance(data, dict) and "data" in data:
+            images = data["data"]
+        else:
+            images = [data]
+
+        image_data = []
+        for i, image in enumerate(images):
+            if isinstance(image, dict) and "b64_json" in image:
+                image_data.append({
+                    'b64_json': image['b64_json'],
+                    'prompt': prompt,
+                    'custom_name': f"{custom_name}_{i+1}" if custom_name else None,
+                    'alt_text': f"Generated image {i+1}: {prompt[:50]}..."
+                })
+
+        if not image_data:
+            logger.warning("未找到可保存的Base64图片数据")
+            return []
+
+        auto_save_results = await auto_save_manager.save_multiple_base64_images(
+            image_data, tool_name="text_to_image"
+        )
+        logger.info(f"Base64 自动保存完成: {len(auto_save_results)} 个图片")
+        return auto_save_results
+    except Exception as e:
+        logger.error(f"Base64 自动保存失败: {e}")
         return []
 
 
