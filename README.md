@@ -1,4 +1,4 @@
-# Seedream 4.0 MCP 工具
+# Seedream 4.0 MCP 工具 (增强版)
 
 ![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
 ![License](https://img.shields.io/badge/license-MIT-green.svg)
@@ -6,6 +6,14 @@
 ![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
 
 基于火山引擎 Seedream 4.0 API 的 MCP（Model Context Protocol）工具集，提供文生图、图生图、多图融合和组图生成等功能。
+
+> **致谢**: 本项目基于 [tengmmvp/Seedream_MCP](https://github.com/tengmmvp/Seedream_MCP) 进行增强开发，感谢原作者的贡献！
+>
+> **增强功能**:
+> - ✨ 七牛云自动上传和公网访问
+> - 🎨 提示词模板系统 (8个预设模板)
+> - 📸 Raycast AI Markdown 图片渲染支持
+> - 💾 优化的图片保存和管理
 
 ## 功能特性
 
@@ -51,7 +59,7 @@ ARK_API_KEY=your_api_key_here
 ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
 SEEDREAM_MODEL_ID=doubao-seedream-4-0-250828
 SEEDREAM_DEFAULT_SIZE=2K
-SEEDREAM_DEFAULT_WATERMARK=true
+SEEDREAM_DEFAULT_WATERMARK=false
 SEEDREAM_TIMEOUT=60
 SEEDREAM_API_TIMEOUT=60
 SEEDREAM_MAX_RETRIES=3
@@ -109,7 +117,81 @@ QINIU_DOMAIN=https://your-domain.com
 - 确保 Python 环境已安装所有依赖
 - 配置完成后重启 MCP 客户端
 
-## 使用方法
+## 快速开始
+
+### 在 MCP 客户端中使用 (推荐)
+
+配置好 MCP 客户端后,你可以直接用自然语言对话生成图片:
+
+#### 示例 1: 基础文生图
+
+**你说:**
+```
+帮我生成一张图片：一只可爱的小恐龙，友好的表情，卡通风格
+```
+
+**AI 回复:**
+
+![示例图片1](https://newimg.t5t6.com/seedream/20251118_102310_a_cute_little_dinosaur_friendly_expression_cartoon_20251118_102310.jpeg)
+
+✅ 图片生成成功！
+- 提示词: 一只可爱的小恐龙，友好的表情，卡通风格
+- 尺寸: 2K
+- 七牛云链接: https://newimg.t5t6.com/seedream/...
+- 本地保存: `seedream_images/2025-11-18/text_to_image/...`
+
+---
+
+#### 示例 2: 使用提示词模板
+
+**你说:**
+```
+潮流派对，关键词：可口可乐
+```
+
+**AI 回复:**
+
+![示例图片2](https://newimg.t5t6.com/seedream/20251118_114216_中文可口可乐潮流派对风格艺术字体运营活动风格主题字体字体大小变化明显错落有致排版部分笔画延长字体笔画_20251118_114216.jpeg)
+
+✅ 图片生成成功！
+- 提示词: 中文"可口可乐",潮流派对风格艺术字体...
+- 尺寸: 2K (默认 16:9)
+- 七牛云链接: https://newimg.t5t6.com/seedream/...
+
+---
+
+#### 示例 3: 公众号封面
+
+**你说:**
+```
+公众号封面，主题：AI 技术革新
+```
+
+**AI 回复:**
+
+✅ 图片生成成功！
+- 提示词: 中文"AI 技术革新",公众号封面风格...
+- 尺寸: 2K (自动使用 21:9 比例)
+- 七牛云链接: https://newimg.t5t6.com/seedream/...
+
+---
+
+### 可用的提示词模板
+
+直接说出模板名称 + 关键词即可:
+
+| 模板名称 | 使用方式 | 适用场景 |
+|---------|---------|---------|
+| 🎨 **潮流派对** | "潮流派对，关键词：XXX" | 运营活动、艺术字体 |
+| 📱 **公众号封面** | "公众号封面，主题：XXX" | 公众号配图 (21:9) |
+| 🎭 **国潮风格** | "国潮风格，主题：XXX" | 中国风设计 |
+| 🌸 **小清新** | "小清新，主题：XXX" | 文艺清新风格 |
+| 🎮 **赛博朋克** | "赛博朋克，主题：XXX" | 科技未来风格 |
+| 🏮 **新年喜庆** | "新年喜庆，主题：XXX" | 节日庆典 |
+| 💼 **商务简约** | "商务简约，主题：XXX" | 商务场景 |
+| 🎨 **水彩插画** | "水彩插画，主题：XXX" | 手绘插画风格 |
+
+---
 
 ### 作为 MCP 服务器运行
 
@@ -135,7 +217,7 @@ async def main():
         result = await client.text_to_image(
             prompt="一只可爱的小猫咪，卡通风格",
             size="2K",
-            watermark=True,
+            watermark=False,
             auto_save=True,
             custom_name="cute_cat"
         )
@@ -160,68 +242,36 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-## 响应格式说明
+## 功能特性详解
 
-所有图片生成工具都支持三种响应格式:
+### 🎨 提示词模板系统
 
-### 1. image 格式(推荐,默认)
+内置 8 个专业提示词模板,只需说出模板名称 + 关键词即可生成对应风格的图片:
 
-返回 MCP ImageContent 类型,可在支持的客户端中直接显示图片。
+- **潮流派对**: 运营活动风格艺术字体
+- **公众号封面**: 自动使用 21:9 比例,适合公众号配图
+- **国潮风格**: 中国传统元素与现代设计结合
+- **小清新**: 文艺清新风格
+- **赛博朋克**: 科技未来风格
+- **新年喜庆**: 节日庆典风格
+- **商务简约**: 专业商务场景
+- **水彩插画**: 手绘插画风格
 
-```json
-{
-  "prompt": "一只可爱的小猫咪",
-  "response_format": "image"
-}
-```
+### ☁️ 七牛云自动上传
 
-**优点**:
-- ✅ 直接在 MCP 客户端中预览图片
-- ✅ 最佳用户体验
-- ✅ 无需手动打开 URL
+配置七牛云后,生成的图片会自动上传到七牛云存储:
 
-**缺点**:
-- ⚠️ 需要下载图片,响应时间稍长
-- ⚠️ 数据量较大
+- ✅ 生成公网可访问的永久链接
+- ✅ 自动生成 Markdown 图片格式
+- ✅ 支持 Raycast AI 直接渲染图片
+- ✅ 本地和云端双重保存
 
-### 2. url 格式
+### 💾 智能图片管理
 
-返回图片 URL 链接。
-
-```json
-{
-  "prompt": "一只可爱的小猫咪",
-  "response_format": "url"
-}
-```
-
-**优点**:
-- ✅ 响应速度快
-- ✅ 数据量小
-- ✅ 可以分享链接
-
-**缺点**:
-- ⚠️ URL 在 24 小时后过期
-- ⚠️ 需要手动打开链接查看
-
-### 3. b64_json 格式
-
-返回 base64 编码的图片数据。
-
-```json
-{
-  "prompt": "一只可爱的小猫咪",
-  "response_format": "b64_json"
-}
-```
-
-**优点**:
-- ✅ 适合程序处理
-- ✅ 不依赖外部 URL
-
-**缺点**:
-- ⚠️ 数据量非常大
-- ⚠️ 不便于直接查看
+- **自动保存**: 图片自动下载到本地,避免 URL 过期
+- **按日期分类**: 自动按年/月创建文件夹
+- **自动清理**: 可配置自动清理过期图片
+- **并发下载**: 支持多图并发下载,提高效率
 
 ## 工具说明
 
@@ -233,23 +283,22 @@ if __name__ == "__main__":
 
 - `prompt` (必需): 文本描述，建议不超过 300 汉字或 600 英文单词
 - `size` (可选): 图像尺寸，可选值：1K、2K、4K，默认 2K
-- `watermark` (可选): 是否添加水印，默认 true
+- `watermark` (可选): 是否添加水印，默认 false
 - `response_format` (可选): 响应格式，可选值：image、url、b64_json，默认 image
 - `auto_save` (可选): 是否自动保存图片到本地，默认使用全局配置
 - `save_path` (可选): 自定义保存路径，不指定则使用默认路径
 - `custom_name` (可选): 自定义文件名前缀
 
-**示例：**
+**自然语言示例：**
 
-```json
-{
-  "prompt": "一只可爱的小猫咪，卡通风格",
-  "size": "2K",
-  "watermark": true,
-  "response_format": "image",
-  "auto_save": true,
-  "custom_name": "cute_cat"
-}
+```
+帮我生成一张图片：一只可爱的小猫咪，卡通风格
+```
+
+或使用提示词模板:
+
+```
+潮流派对，关键词：可口可乐
 ```
 
 ### 2. seedream_image_to_image
@@ -261,7 +310,7 @@ if __name__ == "__main__":
 - `prompt` (必需): 图像编辑指令
 - `image` (必需): 参考图像 URL 或本地文件路径
 - `size` (可选): 输出图像尺寸，默认 2K
-- `watermark` (可选): 是否添加水印，默认 true
+- `watermark` (可选): 是否添加水印，默认 false
 - `response_format` (可选): 响应格式，可选值：image、url、b64_json，默认 image
 - `auto_save` (可选): 是否自动保存图片到本地，默认使用全局配置
 - `save_path` (可选): 自定义保存路径，不指定则使用默认路径
@@ -467,10 +516,76 @@ Seedream_MCP/
 └── README.md             # 说明文档
 ```
 
+## 常见问题
+
+### Q: 图片在 Raycast AI 中不显示?
+
+**A:** 确保:
+1. 配置了七牛云 (图片需要公网可访问的 URL)
+2. 七牛云域名配置正确
+3. 重启 Raycast AI
+
+### Q: 如何关闭水印?
+
+**A:** 在 `.env` 文件中设置:
+```bash
+SEEDREAM_DEFAULT_WATERMARK=false
+```
+
+### Q: 图片保存在哪里?
+
+**A:** 默认保存在 `./seedream_images/` 目录下,按日期和功能分类:
+```
+seedream_images/
+├── 2025-11-18/
+│   ├── text_to_image/
+│   ├── image_to_image/
+│   └── multi_image_fusion/
+```
+
+### Q: 如何使用提示词模板?
+
+**A:** 直接说出模板名称 + 关键词即可:
+```
+潮流派对，关键词：可口可乐
+公众号封面，主题：AI 技术革新
+国潮风格，主题：中秋节
+```
+
+## 贡献
+
+欢迎贡献代码、报告问题或提出建议!
+
+### 贡献方式
+
+1. Fork 本仓库
+2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交你的修改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启一个 Pull Request
+
+### 开发指南
+
+- 遵循现有代码风格
+- 添加必要的测试
+- 更新相关文档
+- 确保所有测试通过
+
+## 致谢
+
+- 感谢 [tengmmvp/Seedream_MCP](https://github.com/tengmmvp/Seedream_MCP) 提供的原始项目
+- 感谢火山引擎提供的 Seedream 4.0 API
+- 感谢七牛云提供的云存储服务
+
 ## 许可证
 
-本项目采用 MIT 许可证。
+本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
 
-## 支持
+## 联系方式
 
-如有问题或建议，请提交 Issue 或 Pull Request。
+- **GitHub Issues**: https://github.com/joeseesun/Seedream_MCP/issues
+- **原项目**: https://github.com/tengmmvp/Seedream_MCP
+
+---
+
+**⭐ 如果这个项目对你有帮助,请给个 Star!**
