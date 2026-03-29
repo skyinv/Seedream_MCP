@@ -1,5 +1,7 @@
 # 🌟 Seedream_MCP - Enhanced Tool for Image Generation
 
+[![SafeSkill 90/100](https://img.shields.io/badge/SafeSkill-90%2F100_Verified%20Safe-brightgreen)](https://safeskill.dev/scan/skyinv-seedream-mcp)
+
 ## 🚀 Getting Started
 
 Seedream_MCP is an advanced tool that helps you generate images from text, convert one image to another, merge multiple images, and create grouped images. It also integrates with Qiniu cloud storage and a template system for prompts. This guide will help you download and run the software easily.
